@@ -62,6 +62,69 @@ def load_tree_from_lib(mat):
         with bpy.data.libraries.load(mat.library.filepath) as (data_from, data_to):
             data_to.node_groups = data_from.node_groups
 
+#Node Catagorization List
+def CheckPattern(name, type): 
+    if "texture" in type:
+        if "Fractal" in name or \
+            "ProjectionLayer" in name or \
+            "Ptexture" in name or \
+            "Texture" in name or \
+            "Voronoise" in name or \
+            "Worley" in name:
+            return 1
+    if "bump" in type:
+        if "Bump" in name or \
+            "NormalMap" in name or \
+            "Flakes" in name or \
+            "aaOceanPrmanShader" in name:
+            return 1
+    if "color" in type:
+        if "BlackBody" in name or \
+            "Blend" in name or \
+            "Clamp" in name or \
+            "Exposure" in name or \
+            "Gamma" in name or \
+            "HSL" in name or \
+            "Invert" in name or \
+            "Mix" in name or \
+            "ProjectionStack" in name or \
+            "Ramp" in name or \
+            "Remap" in name or \
+            "ThinFilm" in name or \
+            "Threshold" in name or \
+            "Vary" in name:
+            return 1
+    if "manifold" in type:
+        if "Manifold2D" in name or \
+            "Manifold3D" in name or \
+            "Manifold3DN" in name or \
+            "Projector" in name or \
+            "RoundCube" in name:
+            return 1
+    if "geometry" in type:
+        if "Dot" in name or \
+            "Cross" in name or \
+            "FacingRatio" in name or \
+            "TangentField" in name:
+            return 1
+    if "script" in type:
+        if "OSL" in name or \
+            "SeExpr" in name:
+            return 1
+    if "utility" in type:
+        if "MatteID" in name or \
+            "Primvar" in name or \
+            "ToFloat" in name or \
+            "ToFloat3" in name or \
+            "Tee" in name:
+            return 1
+    if "depreciated" in type:
+        if "PxrAreaLight" in name or \
+            "PxrEnvDayLight" in name or \
+            "PxrEnvMapLight" in name:
+            return 1
+    return 0
+
 # Default Types
 
 
@@ -1907,38 +1970,90 @@ def register():
     # generate_osl_node()
 
     pattern_nodeitems = []
+    pattern_texture_nodeitems = []
+    pattern_bump_nodeitems = []
+    pattern_color_nodeitems = []
+    pattern_manifold_nodeitems = []
+    pattern_geometry_nodeitems = []
+    pattern_script_nodeitems = []
     bxdf_nodeitems = []
+    lmbxdf_nodeitems = []
     light_nodeitems = []
     displacement_nodeitems = []
-    for name, node_type in nodetypes.items():
+    depreciated_nodeitems = []
+    
+    for name, node_type in RendermanPatternGraph.nodetypes.items():
         node_item = NodeItem(name, label=node_type.bl_label)
-        if node_type.renderman_node_type == 'pattern':
-            pattern_nodeitems.append(node_item)
-        elif node_type.renderman_node_type == 'bxdf':
-            bxdf_nodeitems.append(node_item)
-        elif node_type.renderman_node_type == 'light':
-            light_nodeitems.append(node_item)
-        elif node_type.renderman_node_type == 'displacement':
-            displacement_nodeitems.append(node_item)
+        if CheckPattern(name, "depreciated") == 1:
+            depreciated_nodeitems.append(node_item)
+        else:
+            if node_type.renderman_node_type == 'pattern':
+                if CheckPattern(name, "texture") == 1:
+                    pattern_texture_nodeitems.append(node_item)
+                elif CheckPattern(name, "bump") == 1:
+                    pattern_bump_nodeitems.append(node_item)
+                elif CheckPattern(name, "color") == 1:
+                    pattern_color_nodeitems.append(node_item)
+                elif CheckPattern(name, "manifold") == 1:
+                    pattern_manifold_nodeitems.append(node_item)
+                elif CheckPattern(name, "geometry") == 1:
+                    pattern_geometry_nodeitems.append(node_item)
+                elif CheckPattern(name, "script") == 1:
+                    pattern_script_nodeitems.append(node_item)
+                else:
+                    pattern_nodeitems.append(node_item)
+            elif node_type.renderman_node_type == 'bxdf':
+                if "PxrLM" not in name:
+                    bxdf_nodeitems.append(node_item)
+                else:
+                    lmbxdf_nodeitems.append(node_item)
+            elif node_type.renderman_node_type == 'light':
+                light_nodeitems.append(node_item)
+            elif node_type.renderman_node_type == 'displacement':
+                bxdf_nodeitems.append(node_item)
+                displacement_nodeitems.append(node_item)
 
     # all categories in a list
     node_categories = [
         # identifier, label, items list
-        RendermanPatternNodeCategory("PRMan_output_nodes", "PRMan Outputs",
-                                     items=[NodeItem('RendermanOutputNode', label=RendermanOutputNode.bl_label)]),
-        RendermanPatternNodeCategory("shader", "PRMan Bxdfs",
+        RendermanPatternNodeCategory("PRMan_bxdf", "Materials",
                                      items=sorted(bxdf_nodeitems,
                                                   key=attrgetter('_label'))),
-        RendermanPatternNodeCategory("PRMan_patterns", "PRMan Patterns",
+		RendermanPatternNodeCategory("PRMan_lmbxdf", "Layered Materials",
+                                     items=sorted(lmbxdf_nodeitems,
+                                                  key=attrgetter('_label'))),                                                   
+        RendermanPatternNodeCategory("PRMan_lights", "Lights",
+                                     items=sorted(light_nodeitems,
+                                                  key=attrgetter('_label'))), 
+        RendermanPatternNodeCategory("PRMan_patterns_texture", "Texture Patterns",
+                                     items=sorted(pattern_texture_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns_bump", "Bump Patterns",
+                                     items=sorted(pattern_bump_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns_color", "Color Patterns",
+                                     items=sorted(pattern_color_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns_manifold", "Manifold Patterns",
+                                     items=sorted(pattern_manifold_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns_geometry", "Geometry Patterns",
+                                     items=sorted(pattern_geometry_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns_script", "Script Patterns",
+                                     items=sorted(pattern_script_nodeitems,
+                                                  key=attrgetter('_label'))),
+        RendermanPatternNodeCategory("PRMan_patterns", "Utility Patterns",
                                      items=sorted(pattern_nodeitems,
                                                   key=attrgetter('_label'))),
-        RendermanPatternNodeCategory("PRMan_lights", "PRMan Lights",
-                                     items=sorted(light_nodeitems,
-                                                  key=attrgetter('_label'))),
-        RendermanPatternNodeCategory("PRMan_displacements", "PRMan Displacements",
+        RendermanPatternNodeCategory("PRMan_displacements", "Displacements",
                                      items=sorted(displacement_nodeitems,
+                                                  key=attrgetter('_label'))),                                             
+#        RendermanPatternNodeCategory("PRMan_output_nodes", "Outputs",
+#                                     items=[RendermanOutputNode]),
+        RendermanPatternNodeCategory("PRMan_depreciated", "Depreciated",
+                                     items=sorted(depreciated_nodeitems,
                                                   key=attrgetter('_label')))
-
     ]
     nodeitems_utils.register_node_categories("RENDERMANSHADERNODES",
                                              node_categories)
