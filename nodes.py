@@ -1477,8 +1477,9 @@ def register():
             elif node_type.renderman_node_type == 'light':
                 light_nodeitems.append(node_item)
             elif node_type.renderman_node_type == 'displacement':
-                bxdf_nodeitems.append(node_item)
                 displacement_nodeitems.append(node_item)
+            else:
+                depreciated_nodeitems.append(node_item)
 
     # all categories in a list
     node_categories = [
