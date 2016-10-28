@@ -63,65 +63,18 @@ def load_tree_from_lib(mat):
 
 # Node Chatagorization List
 def CheckPattern(name, type): 
-    if "texture" in type:
-        if "Fractal" in name or \
-            "ProjectionLayer" in name or \
-            "Ptexture" in name or \
-            "Texture" in name or \
-            "Voronoise" in name or \
-            "Worley" in name:
-            return 1
-    if "bump" in type:
-        if "Bump" in name or \
-            "NormalMap" in name or \
-            "Flakes" in name or \
-            "aaOceanPrmanShader" in name:
-            return 1
-    if "color" in type:
-        if "BlackBody" in name or \
-            "Blend" in name or \
-            "Clamp" in name or \
-            "Exposure" in name or \
-            "Gamma" in name or \
-            "HSL" in name or \
-            "Invert" in name or \
-            "Mix" in name or \
-            "ProjectionStack" in name or \
-            "Ramp" in name or \
-            "Remap" in name or \
-            "ThinFilm" in name or \
-            "Threshold" in name or \
-            "Vary" in name:
-            return 1
-    if "manifold" in type:
-        if "Manifold2D" in name or \
-            "Manifold3D" in name or \
-            "Manifold3DN" in name or \
-            "Projector" in name or \
-            "RoundCube" in name:
-            return 1
-    if "geometry" in type:
-        if "Dot" in name or \
-            "Cross" in name or \
-            "FacingRatio" in name or \
-            "TangentField" in name:
-            return 1
-    if "script" in type:
-        if "OSL" in name or \
-            "SeExpr" in name:
-            return 1
-    if "utility" in type:
-        if "MatteID" in name or \
-            "Primvar" in name or \
-            "ToFloat" in name or \
-            "ToFloat3" in name or \
-            "Tee" in name:
-            return 1
-    if "depreciated" in type:
-        if "PxrAreaLight" in name or \
-            "PxrEnvDayLight" in name or \
-            "PxrEnvMapLight" in name:
-            return 1
+    node_categories_map = {"texture": ["PxrFractal", "PxrProjectionLayer", "PxrPtexture", "PxrTexture", "PxrVoronoise", "PxrWorley"],
+                           "bump": ["PxrBump", "PxrNormalMap", "PxrFlakes", "aaOceanPrmanShader"],
+                           "color": ["PxrBlackBody", "PxrBlend", "PxrClamp", "PxrExposure", "PxrGamma", "PxrHSL", "PxrInvert", "PxrMix", "PxrProjectionStack", "PxrRamp", "PxrRemap", "PxrThinFilm", "PxrThreshold", "PxrVary"],
+                           "manifold": ["PxrManifold2D", "PxrManifold3D", "PxrManifold3DN", "PxrProjector", "PxrRoundCube"],
+                           "geometry": ["PxrDot", "PxrCross", "PxrFacingRatio", "PxrTangentField"],
+                           "script": ["PxrOSL", "SeExpr"],
+                           "depreciated": ["PxrAreaLight", "PxrEnvDayLight", "PxrEnvMapLight"]}
+    for cat_name, node_names in node_categories_map.items():
+        if cat_name == type:
+            for node_name in node_names:
+                if node_name in name:
+                    return 1
     return 0
          
 # Default Types
